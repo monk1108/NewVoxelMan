@@ -15,7 +15,7 @@ the maximum efficiency of multi-core processors.
 System requirements
 -------------------
 
-- Unity 2022 LTS
+- Unity 20222 LTS
 
 ## Refinements
 
