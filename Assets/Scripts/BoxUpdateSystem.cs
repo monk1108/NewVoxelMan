@@ -123,13 +123,39 @@ partial struct BoxUpdateJob : IJobEntity
             xform.Position.z *= Voxelizer.Friction;
         }
 
+        // 旋转
+        var rotationSpeed = 90.0f; // 每秒旋转角度
+        xform.Rotation = math.mul(xform.Rotation, quaternion.RotateY(rotationSpeed * DeltaTime));
+        // 螺旋
+        var spiralSpeed = 0.8f; // 水平方向移动速度
+        var spiralFrequency = 3.0f; // 螺旋运动频率
+        xform.Position.x += spiralSpeed * math.sin(Time * spiralFrequency) * DeltaTime;
+        xform.Position.z += spiralSpeed * math.cos(Time * spiralFrequency) * DeltaTime;
+
         // Scaling animation
         var p01 = box.Time / Voxelizer.VoxelLife;
         var p01_2 = p01 * p01;
         xform.Scale = Voxelizer.VoxelSize * (1 - p01_2 * p01_2);
 
-        // 设置颜色为新的颜色
-        color.Value = NewColor;
+        // HSV 动态调整
+        float hue, saturation, value;
+        Color.RGBToHSV((Color)NewColor, out hue, out saturation, out value);
+
+        // 动态调整饱和度和亮度
+        saturation = 0.7f + 0.3f * math.sin(Time * 3.0f); // 饱和度在 0.3 到 3 之间波动
+        value = 0.6f + 0.4f * math.cos(Time * 2.5f);      // 亮度在 0.4 到 2.5 之间波动
+        // 碰撞增强动态亮度
+        if (xform.Position.y < 0.1f && math.abs(box.Velocity) > 0.1f)
+        {
+            value += 0.2f; // 强化亮度变化
+            xform.Scale *= 1.2f; // 提升缩放效果
+        }
+        
+        // 将 HSV 转回 RGB
+        var dynamicColor = (Vector4)Color.HSVToRGB(hue, saturation, value);
+
+        // 设置颜色
+        color.Value = dynamicColor;
 
         // New Visual Feedback: Add a brief scale-up effect when the box hits the ground
         if (xform.Position.y < 0.1f && math.abs(box.Velocity) > 0.1f)
