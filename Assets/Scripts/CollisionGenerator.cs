@@ -22,6 +22,8 @@ public class CollisionGenerator : MonoBehaviour
     [SerializeField] private Material controllableMaterial; // 可控小人材质
     [SerializeField] private Material defaultMaterial; // 默认小人材质
     [SerializeField] private Material outlineMaterial; // 小人描边材质 (新增材质属性)
+    [SerializeField] private GameObject glowCirclePrefab; // 光圈预制体 (新增属性)
+    [SerializeField] private GameObject quadObject; // 初始的Quad对象 (新增属性)
 
     #endregion
 
@@ -83,6 +85,12 @@ public class CollisionGenerator : MonoBehaviour
             _renderer.material = defaultMaterial;
         }
 
+        // 隐藏初始的Quad对象
+        // if (quadObject != null)
+        // {
+        //     quadObject.SetActive(false);
+        // }
+
         // 应用描边效果 (新增功能)
         ApplyOutlineEffect();
     }
@@ -91,6 +99,9 @@ public class CollisionGenerator : MonoBehaviour
     {
         // 更新地面波浪效果
         UpdateGroundWave();
+
+        // 绘制光圈效果 (新增功能)
+        DrawGlowCircle();
 
         // 绘制参照线
         Debug.DrawLine(new Vector3(-50, 0, 0), new Vector3(50, 0, 0), Color.green);
@@ -132,6 +143,18 @@ public class CollisionGenerator : MonoBehaviour
         Profiler.BeginSample("MeshCollider Update");
         CreateCollider(manager, _entity, vtx_re, idx_re, gameObject.layer);
         Profiler.EndSample();
+    }
+
+    void DrawGlowCircle()
+    {
+        // 获取角色位置并在地面上绘制光圈
+        Vector3 characterPosition = _source.transform.position;
+        if (glowCirclePrefab != null)
+        {
+            GameObject glowCircle = Instantiate(glowCirclePrefab, new Vector3(characterPosition.x, 0f, characterPosition.z), Quaternion.Euler(0, 0, 0));
+            glowCircle.transform.localScale = new Vector3(1f, -0.01f, 1f); // 调整光圈大小
+            Destroy(glowCircle, 0.05f); // 确保光圈在一段时间后消失
+        }
     }
 
     void ApplyOutlineEffect()

@@ -1,8 +1,16 @@
 Voxelman
 ========
 
-![gif](https://github.com/keijiro/Voxelman/assets/343936/007c60af-dc88-4137-af3d-41820a681761)
-![gif](https://github.com/keijiro/Voxelman/assets/343936/8f6e6a29-cf0e-4a8b-afc1-8a87804cb518)
+<!-- add two local videos -->
+<video width="800" controls>
+    <source src="./video/video1.mp4" type="video/mp4">
+</video>
+
+<br>
+<video width="800" controls>
+    <source src="./video/video2.mp4" type="video/mp4">
+</video>
+
 
 **Voxelman** is an example that shows how to use the new **[Entity Component
 System]** with Unity in an extreme way. Each voxel in the scene is instantiated
@@ -25,4 +33,7 @@ System requirements
 4. 键盘adws分别使box向左右前后移动
 5. 动态调整饱和度和亮度
 6. 改变体素生成的随机分布，使其呈现环形分布(SpawnerSystem.cs)
+7. 对两个小人添加描边效果
+8. 当粒子碰撞时，缩小它们的体积，加深颜色
+9. 对每个小人添加光圈，追踪小人跳舞轨迹
 ---------------------
