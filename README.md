@@ -1,15 +1,11 @@
 Voxelman
 ========
 
-<!-- add two local videos -->
-<video width="800" controls>
-    <source src="./video/video1.mp4" type="video/mp4">
-</video>
+[![Video 1](https://img.youtube.com/vi/cbtDk5IhMLI/0.jpg)](https://www.youtube.com/watch?v=cbtDk5IhMLI)
 
-<br>
-<video width="800" controls>
-    <source src="./video/video2.mp4" type="video/mp4">
-</video>
+
+[![Video 2](https://img.youtube.com/vi/Ffuz0y7hKYc/0.jpg)](https://www.youtube.com/watch?v=Ffuz0y7hKYc)
+
 
 
 **Voxelman** is an example that shows how to use the new **[Entity Component
