@@ -151,6 +151,14 @@ partial struct BoxUpdateJob : IJobEntity
             xform.Scale *= 1.2f; // 提升缩放效果
         }
         
+        // 当两个粒子碰撞时，将颜色加深加黑，并缩小体积 (新增功能)
+        if (xform.Position.y < 0.1f && math.abs(box.Velocity) > 0.1f)
+        {
+            saturation *= 0.5f; // 大幅降低饱和度
+            value *= 0.3f; // 大幅降低亮度
+            xform.Scale *= 0.8f; // 缩小体积
+        }
+
         // 将 HSV 转回 RGB
         var dynamicColor = (Vector4)Color.HSVToRGB(hue, saturation, value);
 
