@@ -160,7 +160,7 @@ partial struct BoxUpdateJob : IJobEntity
         // New Visual Feedback: Add a brief scale-up effect when the box hits the ground
         if (xform.Position.y < 0.1f && math.abs(box.Velocity) > 0.1f)
         {
-            xform.Scale *= 5f; // Temporarily scale up to emphasize the bounce
+            xform.Scale *= 1f; // Temporarily scale up to emphasize the bounce
         }
     }
 }

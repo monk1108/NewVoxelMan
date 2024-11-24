@@ -21,6 +21,7 @@ public class CollisionGenerator : MonoBehaviour
     [SerializeField] private bool isControllable = false; // 该小人是否可被控制
     [SerializeField] private Material controllableMaterial; // 可控小人材质
     [SerializeField] private Material defaultMaterial; // 默认小人材质
+    [SerializeField] private Material outlineMaterial; // 小人描边材质 (新增材质属性)
 
     #endregion
 
@@ -81,6 +82,9 @@ public class CollisionGenerator : MonoBehaviour
         {
             _renderer.material = defaultMaterial;
         }
+
+        // 应用描边效果 (新增功能)
+        ApplyOutlineEffect();
     }
 
     void Update()
@@ -100,7 +104,7 @@ public class CollisionGenerator : MonoBehaviour
         _source.BakeMesh(_mesh);
         Profiler.EndSample();
 
-        // Simulate ground cracking
+        // 模拟地面裂纹
         var vertices = _mesh.vertices;
         for (int i = 0; i < vertices.Length; i++)
         {
@@ -128,6 +132,26 @@ public class CollisionGenerator : MonoBehaviour
         Profiler.BeginSample("MeshCollider Update");
         CreateCollider(manager, _entity, vtx_re, idx_re, gameObject.layer);
         Profiler.EndSample();
+    }
+
+    void ApplyOutlineEffect()
+    {
+        // 创建一个新的描边对象，通过复制 SkinnedMeshRenderer 实现 (新增功能)
+        GameObject outlineObject = new GameObject("Outline");
+        outlineObject.transform.SetParent(_source.transform, false);
+        outlineObject.transform.localPosition = Vector3.zero;
+        outlineObject.transform.localRotation = Quaternion.identity;
+        outlineObject.transform.localScale = Vector3.one;
+
+        SkinnedMeshRenderer outlineRenderer = outlineObject.AddComponent<SkinnedMeshRenderer>();
+        outlineRenderer.sharedMesh = _source.sharedMesh;
+        outlineRenderer.material = outlineMaterial; // 使用描边材质
+        outlineRenderer.rootBone = _source.rootBone;
+        outlineRenderer.bones = _source.bones;
+
+        // 设置描边效果，使其在原始网格后面渲染，通过调整渲染顺序 (新增功能)
+        outlineRenderer.material.SetFloat("_OutlineWidth", 0.03f); // 描边宽度
+        outlineRenderer.material.renderQueue = 3000; // 确保描边在主对象之后渲染
     }
 
     #endregion

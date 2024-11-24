@@ -292,7 +292,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _SceneAsset: {fileID: 102900000, guid: 0a0d21cae707641cdb7930c832a5bf4a, type: 3}
-  _HierarchyColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  _HierarchyColor: {r: 0.5019608, g: 0.5019608, b: 0.5019608, a: 1}
   AutoLoadScene: 1
   _SceneGUID:
     Value:
@@ -350,6 +350,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _source: {fileID: 9401000}
+  waveAmplitude: 1
+  waveFrequency: 0.5
+  isControllable: 0
+  controllableMaterial: {fileID: 10651, guid: 0000000000000000f000000000000000, type: 0}
+  defaultMaterial: {fileID: 10651, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &326223977
 Transform:
   m_ObjectHideFlags: 0
@@ -631,6 +636,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _source: {fileID: 213185231}
+  waveAmplitude: 1
+  waveFrequency: 0.5
+  isControllable: 0
+  controllableMaterial: {fileID: 15303, guid: 0000000000000000f000000000000000, type: 0}
+  defaultMaterial: {fileID: 15303, guid: 0000000000000000f000000000000000, type: 0}
 --- !u!4 &754243344
 Transform:
   m_ObjectHideFlags: 0
