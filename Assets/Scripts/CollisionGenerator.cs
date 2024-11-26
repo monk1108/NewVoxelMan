@@ -15,15 +15,15 @@ public class CollisionGenerator : MonoBehaviour
 {
     #region Editable attributes
 
-    [SerializeField] private SkinnedMeshRenderer _source = null; // 地面网格源
-    [SerializeField] private float waveAmplitude = 2f; // 波浪高度
-    [SerializeField] private float waveFrequency = 0.5f; // 波浪频率
-    [SerializeField] private bool isControllable = false; // 该小人是否可被控制
-    [SerializeField] private Material controllableMaterial; // 可控小人材质
-    [SerializeField] private Material defaultMaterial; // 默认小人材质
-    [SerializeField] private Material outlineMaterial; // 小人描边材质 (新增材质属性)
-    [SerializeField] private GameObject glowCirclePrefab; // 光圈预制体 (新增属性)
-    [SerializeField] private GameObject quadObject; // 初始的Quad对象 (新增属性)
+    [SerializeField] private SkinnedMeshRenderer _source = null; // Ground mesh source
+    [SerializeField] private float waveAmplitude = 2f; // Wave height
+    [SerializeField] private float waveFrequency = 0.5f; // Wave frequency
+    [SerializeField] private bool isControllable = false; // Whether this character can be controlled
+    [SerializeField] private Material controllableMaterial; // Material for controllable character
+    [SerializeField] private Material defaultMaterial; // Default character material
+    [SerializeField] private Material outlineMaterial; // Character outline material (new material property)
+    [SerializeField] private GameObject glowCirclePrefab; // Glow circle prefab (new property)
+    [SerializeField] private GameObject quadObject; // Initial Quad object (new property)
 
     #endregion
 
@@ -75,7 +75,7 @@ public class CollisionGenerator : MonoBehaviour
         var world = new PhysicsWorldIndex { Value = 0 };
         manager.AddSharedComponentManaged(_entity, world);
 
-        // 设置材质
+        // Set material
         if (isControllable)
         {
             _renderer.material = controllableMaterial;
@@ -85,25 +85,25 @@ public class CollisionGenerator : MonoBehaviour
             _renderer.material = defaultMaterial;
         }
 
-        // 隐藏初始的Quad对象
+        // Hide the initial Quad object
         // if (quadObject != null)
         // {
         //     quadObject.SetActive(false);
         // }
 
-        // 应用描边效果 (新增功能)
+        // Apply outline effect (new feature)
         ApplyOutlineEffect();
     }
 
     void Update()
     {
-        // 更新地面波浪效果
+        // Update ground wave effect
         UpdateGroundWave();
 
-        // 绘制光圈效果 (新增功能)
+        // Draw glow circle effect (new feature)
         DrawGlowCircle();
 
-        // 绘制参照线
+        // Draw reference lines
         Debug.DrawLine(new Vector3(-50, 0, 0), new Vector3(50, 0, 0), Color.green);
         Debug.DrawLine(new Vector3(0, 0, -50), new Vector3(0, 0, 50), Color.green);
     }
@@ -115,7 +115,7 @@ public class CollisionGenerator : MonoBehaviour
         _source.BakeMesh(_mesh);
         Profiler.EndSample();
 
-        // 模拟地面裂纹
+        // Simulate ground cracks
         var vertices = _mesh.vertices;
         for (int i = 0; i < vertices.Length; i++)
         {
@@ -147,19 +147,19 @@ public class CollisionGenerator : MonoBehaviour
 
     void DrawGlowCircle()
     {
-        // 获取角色位置并在地面上绘制光圈
+        // Get character position and draw glow circle on the ground
         Vector3 characterPosition = _source.transform.position;
         if (glowCirclePrefab != null)
         {
             GameObject glowCircle = Instantiate(glowCirclePrefab, new Vector3(characterPosition.x, 0f, characterPosition.z), Quaternion.Euler(0, 0, 0));
-            glowCircle.transform.localScale = new Vector3(1f, -0.01f, 1f); // 调整光圈大小
-            Destroy(glowCircle, 0.05f); // 确保光圈在一段时间后消失
+            glowCircle.transform.localScale = new Vector3(1f, -0.01f, 1f); // Adjust glow circle size
+            Destroy(glowCircle, 0.05f); // Ensure the glow circle disappears after a while
         }
     }
 
     void ApplyOutlineEffect()
     {
-        // 创建一个新的描边对象，通过复制 SkinnedMeshRenderer 实现 (新增功能)
+        // Create a new outline object by copying the SkinnedMeshRenderer (new feature)
         GameObject outlineObject = new GameObject("Outline");
         outlineObject.transform.SetParent(_source.transform, false);
         outlineObject.transform.localPosition = Vector3.zero;
@@ -168,13 +168,13 @@ public class CollisionGenerator : MonoBehaviour
 
         SkinnedMeshRenderer outlineRenderer = outlineObject.AddComponent<SkinnedMeshRenderer>();
         outlineRenderer.sharedMesh = _source.sharedMesh;
-        outlineRenderer.material = outlineMaterial; // 使用描边材质
+        outlineRenderer.material = outlineMaterial; // Using outline material
         outlineRenderer.rootBone = _source.rootBone;
         outlineRenderer.bones = _source.bones;
 
-        // 设置描边效果，使其在原始网格后面渲染，通过调整渲染顺序 (新增功能)
-        outlineRenderer.material.SetFloat("_OutlineWidth", 0.03f); // 描边宽度
-        outlineRenderer.material.renderQueue = 3000; // 确保描边在主对象之后渲染
+        // Set the outline effect to render behind the original mesh by adjusting the render queue (new feature)
+        outlineRenderer.material.SetFloat("_OutlineWidth", 0.03f); // Outline width
+        outlineRenderer.material.renderQueue = 3000; // Ensure the outline renders after the main object
     }
 
     #endregion
