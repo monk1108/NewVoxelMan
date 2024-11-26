@@ -21,7 +21,7 @@ public partial struct SpawnerSystem : ISystem
             var world = SystemAPI.GetSingleton<PhysicsWorldSingleton>().PhysicsWorld;
 
             // Timer update
-            // 增加频率随时间动态变化的规则
+            // Add a rule where the frequency dynamically changes over time
             var dynamicFrequency = spawner.ValueRO.Frequency * (1 + 0.5f * math.sin((float)SystemAPI.Time.ElapsedTime));
 
             var nt = spawner.ValueRO.Timer + dynamicFrequency * dt;
@@ -39,9 +39,9 @@ public partial struct SpawnerSystem : ISystem
             // Racast loop
             for (var i = 0; i < count; i++)
             {
-                // 改变体素生成的随机分布，使其呈现环形分布
-                var angle = spawner.ValueRW.Random.NextFloat(0, math.PI * 2); // 随机角度
-                var radius = spawner.ValueRW.Random.NextFloat(0, math.length(ext.xy)); // 随机半径
+                // Change the random distribution of voxel generation to form a ring pattern
+                var angle = spawner.ValueRW.Random.NextFloat(0, math.PI * 2); // Random angle
+                var radius = spawner.ValueRW.Random.NextFloat(0, math.length(ext.xy)); // Random radius
                 var disp = math.float2(math.cos(angle) * radius, math.sin(angle) * radius);
 
                 var vox = SystemAPI.GetSingleton<Voxelizer>();
