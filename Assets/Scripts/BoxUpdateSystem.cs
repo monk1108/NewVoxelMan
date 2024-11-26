@@ -8,16 +8,16 @@ using Unity.Transforms;
 [BurstCompile(CompileSynchronously = true)]
 public partial struct BoxUpdateSystem : ISystem
 {
-    private Vector4 _newColor; // 用于存储新的颜色
-    private float _waveAmplitude; // 初始振幅
-    private float _moveSpeed; // 移动速度
+    private Vector4 _newColor; // Used to store the new color
+    private float _waveAmplitude; // Initial amplitude
+    private float _moveSpeed; // Movement speed
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        _newColor = (Vector4)Color.white; // 初始化为白色
-        _waveAmplitude = 1.0f; // 初始化振幅
-        _moveSpeed = 10.0f; // 初始化移动速度
+        _newColor = (Vector4)Color.white; // Initialize to white
+        _waveAmplitude = 1.0f; // Initialize amplitude
+        _moveSpeed = 10.0f; // Initialize movement speed
     }
 
     [BurstCompile]
@@ -29,15 +29,15 @@ public partial struct BoxUpdateSystem : ISystem
           SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
           .CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter();
 
-        // 检测鼠标左键点击
+        // Detect left mouse click
         if (Input.GetMouseButtonDown(0))
         {
-            _newColor = (Vector4)UnityEngine.Random.ColorHSV(0.0f, 1.0f, 0.5f, 1.0f, 0.8f, 1.0f); // 生成一个较为好看的随机颜色（浅色系）
-            _waveAmplitude = UnityEngine.Random.Range(1.0f, 100.0f); // 随机改变振幅
-            Debug.Log($"New wave amplitude: {_waveAmplitude}"); // 输出新的振幅
+            _newColor = (Vector4)UnityEngine.Random.ColorHSV(0.0f, 1.0f, 0.5f, 1.0f, 0.8f, 1.0f); //Generate a relatively nice random color (light color)
+            _waveAmplitude = UnityEngine.Random.Range(1.0f, 100.0f); // Randomly change amplitude
+            Debug.Log($"New wave amplitude: {_waveAmplitude}"); // Output the new amplitude
         }
 
-        // 键盘控制移动
+        // Keyboard control movement
         float moveX = 0f;
         float moveZ = 0f;
 
@@ -68,7 +68,7 @@ public partial struct BoxUpdateSystem : ISystem
             Voxelizer = SystemAPI.GetSingleton<Voxelizer>(),
             Time = (float)SystemAPI.Time.ElapsedTime,
             DeltaTime = SystemAPI.Time.DeltaTime,
-            NewColor = _newColor, // 将颜色传递给Job
+            NewColor = _newColor, // Pass the color to the Job
             MoveX = moveX,
             MoveZ = moveZ
         };
@@ -84,9 +84,9 @@ partial struct BoxUpdateJob : IJobEntity
     public Voxelizer Voxelizer;
     public float Time;
     public float DeltaTime;    
-    public Vector4 NewColor; // 新增的字段
-    public float MoveX; // X方向移动
-    public float MoveZ; // Z方向移动
+    public Vector4 NewColor; // New field
+    public float MoveX; // Movement in X direction
+    public float MoveZ; // Movement in Z direction
 
     void Execute([ChunkIndexInQuery] int index,
                  Entity entity,
@@ -123,12 +123,12 @@ partial struct BoxUpdateJob : IJobEntity
             xform.Position.z *= Voxelizer.Friction;
         }
 
-        // 旋转
-        var rotationSpeed = 90.0f; // 每秒旋转角度
+        // Rotation
+        var rotationSpeed = 90.0f; // Rotation angle per second
         xform.Rotation = math.mul(xform.Rotation, quaternion.RotateY(rotationSpeed * DeltaTime));
-        // 螺旋
-        var spiralSpeed = 0.8f; // 水平方向移动速度
-        var spiralFrequency = 3.0f; // 螺旋运动频率
+        // Spiral
+        var spiralSpeed = 0.8f; // Horizontal movement speed
+        var spiralFrequency = 3.0f; // Spiral motion frequency
         xform.Position.x += spiralSpeed * math.sin(Time * spiralFrequency) * DeltaTime;
         xform.Position.z += spiralSpeed * math.cos(Time * spiralFrequency) * DeltaTime;
 
@@ -137,32 +137,32 @@ partial struct BoxUpdateJob : IJobEntity
         var p01_2 = p01 * p01;
         xform.Scale = Voxelizer.VoxelSize * (1 - p01_2 * p01_2);
 
-        // HSV 动态调整
+        // Dynamic adjustment of HSV
         float hue, saturation, value;
         Color.RGBToHSV((Color)NewColor, out hue, out saturation, out value);
 
-        // 动态调整饱和度和亮度
-        saturation = 0.7f + 0.3f * math.sin(Time * 3.0f); // 饱和度在 0.3 到 3 之间波动
-        value = 0.6f + 0.4f * math.cos(Time * 2.5f);      // 亮度在 0.4 到 2.5 之间波动
-        // 碰撞增强动态亮度
+        // Dynamically adjust saturation and brightness
+        saturation = 0.7f + 0.3f * math.sin(Time * 3.0f); // Saturation fluctuates between 0.3 and 3
+        value = 0.6f + 0.4f * math.cos(Time * 2.5f);      // Brightness fluctuates between 0.4 and 2.5
+        // Enhance dynamic brightness on collision
         if (xform.Position.y < 0.1f && math.abs(box.Velocity) > 0.1f)
         {
-            value += 0.2f; // 强化亮度变化
-            xform.Scale *= 1.2f; // 提升缩放效果
+            value += 0.2f; // Enhance brightness change
+            xform.Scale *= 1.2f; // Enhance scaling effect
         }
         
-        // 当两个粒子碰撞时，将颜色加深加黑，并缩小体积 (新增功能)
+        // When two particles collide, darken and blacken the color and reduce the size (new feature)
         if (xform.Position.y < 0.1f && math.abs(box.Velocity) > 0.1f)
         {
-            saturation *= 0.5f; // 大幅降低饱和度
-            value *= 0.3f; // 大幅降低亮度
-            xform.Scale *= 0.8f; // 缩小体积
+            saturation *= 0.5f; // Significantly reduce saturation
+            value *= 0.3f; // Significantly reduce brightness
+            xform.Scale *= 0.8f; // Reduce size
         }
 
-        // 将 HSV 转回 RGB
+        // Convert HSV back to RGB
         var dynamicColor = (Vector4)Color.HSVToRGB(hue, saturation, value);
 
-        // 设置颜色
+        // Set color
         color.Value = dynamicColor;
 
         // New Visual Feedback: Add a brief scale-up effect when the box hits the ground
