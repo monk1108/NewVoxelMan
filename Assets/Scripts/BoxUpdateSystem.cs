@@ -48,12 +48,14 @@ public partial struct BoxUpdateSystem : ISystem
         if (Input.GetKey(KeyCode.D)) moveX += _moveSpeed * dt;
 
         // Wind force
+        // 不再使用 direction 来计算直线风，仍然获取WindForce
         float3 windDirection = new float3(0, 1, 1);
-        float windStrength = 10.0f;
+        float windStrength = 15.0f;
         if (SystemAPI.HasSingleton<WindForce>())
         {
             var wind = SystemAPI.GetSingleton<WindForce>();
-            windDirection = wind.Direction;
+            // 保留获取，稍后龙卷风根据wind.Strength调整，但忽略wind.Direction
+            windDirection = wind.Direction; // 虽然获取了，但后面不用
             windStrength = wind.Strength;
         }
 
@@ -69,7 +71,6 @@ public partial struct BoxUpdateSystem : ISystem
             NewColor = _newColor,
             MoveX = moveX,
             MoveZ = moveZ,
-            WindDirection = windDirection,
             WindStrength = windStrength
         };
 
@@ -87,7 +88,6 @@ partial struct BoxUpdateJob : IJobEntity
     public Vector4 NewColor;
     public float MoveX;
     public float MoveZ;
-    public float3 WindDirection;
     public float WindStrength;
 
     void Execute([ChunkIndexInQuery] int index,
@@ -105,32 +105,48 @@ partial struct BoxUpdateJob : IJobEntity
             return;
         }
 
-        // Gravity as a vector
+        // Gravity
         float3 gravityVector = new float3(0, -Voxelizer.Gravity, 0);
-
-        // Update velocity with gravity
         box.Velocity += gravityVector * DeltaTime;
 
-        // Add wind force
-        box.Velocity += WindDirection * WindStrength * DeltaTime;
+        // Tornado logic
+        // 假设龙卷风中心在(0,0,0)，半径10内有影响
+        float3 center = float3.zero;
+        float3 relativePos = xform.Position - center;
+        float distanceXZ = math.length(new float2(relativePos.x, relativePos.z));
+        float radius = 10f; // 可调整
+
+        float3 wind = float3.zero;
+        if (distanceXZ < radius)
+        {
+            // 计算切线方向：沿中心旋转
+            float angle = math.atan2(relativePos.z, relativePos.x) + math.radians(90f);
+            float3 tangentDirection = new float3(math.cos(angle), 0, math.sin(angle));
+
+            // 根据高度给一点向上拉力，越接近中心越被拉起
+            // 这里简单处理，给定一个固定的向上分量
+            float3 upwardDirection = new float3(0,1,0);
+
+            // 风力随Voxel位置可以变化，这里简单处理，强度和WindStrength相关
+            // 切线方向让物体绕中心旋转，上方向将其抬起
+            wind = tangentDirection * WindStrength + upwardDirection * (WindStrength * 0.5f);
+        }
+
+        box.Velocity += wind * DeltaTime;
 
         // Update position
         xform.Position += box.Velocity * DeltaTime;
 
-        // Apply user movement (direct position shift)
+        // 用户控制
         xform.Position.x += MoveX;
         xform.Position.z += MoveZ;
 
-        // Ground collision
+        // 地面碰撞
         if (xform.Position.y < 0)
         {
-            // Reflect vertical velocity
             box.Velocity.y = -box.Velocity.y * Voxelizer.Elasticity;
-
-            // Fix position above ground
             xform.Position.y = -xform.Position.y;
 
-            // Apply friction to horizontal velocity
             box.Velocity.x *= Voxelizer.Friction;
             box.Velocity.z *= Voxelizer.Friction;
         }
@@ -157,7 +173,6 @@ partial struct BoxUpdateJob : IJobEntity
         saturation = 0.7f + 0.3f * math.sin(Time * 3.0f);
         value = 0.6f + 0.4f * math.cos(Time * 2.5f);
 
-        // Velocity magnitude for collision effects
         float speedMagnitude = math.length(box.Velocity);
         if (xform.Position.y < 0.1f && speedMagnitude > 0.1f)
         {
@@ -165,7 +180,6 @@ partial struct BoxUpdateJob : IJobEntity
             xform.Scale *= 1.2f;
         }
 
-        // Further darken on collision
         if (xform.Position.y < 0.1f && speedMagnitude > 0.1f)
         {
             saturation *= 0.5f;
