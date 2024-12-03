@@ -32,6 +32,7 @@ System requirements
 7. Add outline effects to both characters.
 8. When particles collide, reduce their size and deepen their color.
 9. Add a halo effect to each character to trace their dance trajectory.
+10. Added tornado effect to the voxels.
 
 ---------------------
 
