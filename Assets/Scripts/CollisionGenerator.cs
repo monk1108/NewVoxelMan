@@ -151,9 +151,13 @@ public class CollisionGenerator : MonoBehaviour
         Vector3 characterPosition = _source.transform.position;
         if (glowCirclePrefab != null)
         {
-            GameObject glowCircle = Instantiate(glowCirclePrefab, new Vector3(characterPosition.x, 0f, characterPosition.z), Quaternion.Euler(0, 0, 0));
-            glowCircle.transform.localScale = new Vector3(1f, -0.01f, 1f); // Adjust glow circle size
-            Destroy(glowCircle, 0.05f); // Ensure the glow circle disappears after a while
+            GameObject glowCircle = Instantiate(glowCirclePrefab, 
+                new Vector3(characterPosition.x, 0f, characterPosition.z), 
+                Quaternion.Euler(0, 0, 0));
+            // Adjust glow circle size
+            glowCircle.transform.localScale = new Vector3(1f, -0.01f, 1f); 
+            // Ensure the glow circle disappears after a while
+            Destroy(glowCircle, 0.05f); 
         }
     }
 

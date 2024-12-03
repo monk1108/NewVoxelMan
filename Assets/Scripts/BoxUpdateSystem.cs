@@ -32,9 +32,12 @@ public partial struct BoxUpdateSystem : ISystem
         // Detect left mouse click
         if (Input.GetMouseButtonDown(0))
         {
-            _newColor = (Vector4)UnityEngine.Random.ColorHSV(0.0f, 1.0f, 0.5f, 1.0f, 0.8f, 1.0f); //Generate a relatively nice random color (light color)
-            _waveAmplitude = UnityEngine.Random.Range(1.0f, 100.0f); // Randomly change amplitude
-            Debug.Log($"New wave amplitude: {_waveAmplitude}"); // Output the new amplitude
+             // Generate a relatively nice random color (light color)
+            _newColor = (Vector4)UnityEngine.Random.ColorHSV(0.0f, 1.0f, 0.5f, 1.0f, 0.8f, 1.0f);
+            // Randomly change amplitude
+            _waveAmplitude = UnityEngine.Random.Range(1.0f, 100.0f); 
+            // Output the new amplitude
+            Debug.Log($"New wave amplitude: {_waveAmplitude}"); 
         }
 
         // Keyboard control movement
@@ -151,7 +154,7 @@ partial struct BoxUpdateJob : IJobEntity
             xform.Scale *= 1.2f; // Enhance scaling effect
         }
         
-        // When two particles collide, darken and blacken the color and reduce the size (new feature)
+        // When two particles collide, darken and blacken the color and reduce the size
         if (xform.Position.y < 0.1f && math.abs(box.Velocity) > 0.1f)
         {
             saturation *= 0.5f; // Significantly reduce saturation

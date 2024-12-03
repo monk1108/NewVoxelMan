@@ -23,13 +23,18 @@ System requirements
 
 ## Refinements
 
-1. 地面上加了横竖两条浅绿色的基准线
-2. 显示两个小人，一个玫红色，一个黑金mesh
-3. 鼠标左键，改变box颜色和振幅（不太明显）
-4. 键盘adws分别使box向左右前后移动
-5. 动态调整饱和度和亮度
-6. 改变体素生成的随机分布，使其呈现环形分布(SpawnerSystem.cs)
-7. 对两个小人添加描边效果
-8. 当粒子碰撞时，缩小它们的体积，加深颜色
-9. 对每个小人添加光圈，追踪小人跳舞轨迹
+1. Add two light green reference lines on the ground, one horizontal and one vertical.
+2. Display two characters, one magenta and one black-gold mesh.
+3. Left mouse button: change the box color and amplitude (not very noticeable).
+4. Keyboard keys A, D, W, and S move the box left, right, forward, and backward, respectively.
+5. Dynamically adjust saturation and brightness.
+6. Modify the random distribution of voxels to form a ring shape (in SpawnerSystem.cs).
+7. Add outline effects to both characters.
+8. When particles collide, reduce their size and deepen their color.
+9. Add a halo effect to each character to trace their dance trajectory.
+
 ---------------------
+
+## How to Run
+
+You can run the animation by simply downloading the whole project and open it up with the correct Unity version.
