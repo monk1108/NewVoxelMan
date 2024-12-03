@@ -48,14 +48,14 @@ public partial struct BoxUpdateSystem : ISystem
         if (Input.GetKey(KeyCode.D)) moveX += _moveSpeed * dt;
 
         // Wind force
-        // 不再使用 direction 来计算直线风，仍然获取WindForce
+        // Direction is no longer used to calculate straight-line wind, but WindForce is still obtained
         float3 windDirection = new float3(0, 1, 1);
         float windStrength = 15.0f;
         if (SystemAPI.HasSingleton<WindForce>())
         {
             var wind = SystemAPI.GetSingleton<WindForce>();
-            // 保留获取，稍后龙卷风根据wind.Strength调整，但忽略wind.Direction
-            windDirection = wind.Direction; // 虽然获取了，但后面不用
+            // Keep the acquisition, and later the tornado will adjust according to wind.Strength, but ignore wind.Direction
+            windDirection = wind.Direction; // Although obtained, but not used later
             windStrength = wind.Strength;
         }
 
@@ -110,25 +110,25 @@ partial struct BoxUpdateJob : IJobEntity
         box.Velocity += gravityVector * DeltaTime;
 
         // Tornado logic
-        // 假设龙卷风中心在(0,0,0)，半径10内有影响
+        // Assume that the center of the tornado is at (0,0,0) and the radius is 10.
         float3 center = float3.zero;
         float3 relativePos = xform.Position - center;
         float distanceXZ = math.length(new float2(relativePos.x, relativePos.z));
-        float radius = 10f; // 可调整
+        float radius = 10f; // adjustable
 
         float3 wind = float3.zero;
         if (distanceXZ < radius)
         {
-            // 计算切线方向：沿中心旋转
+            // Calculate tangent direction: Rotate about center
             float angle = math.atan2(relativePos.z, relativePos.x) + math.radians(90f);
             float3 tangentDirection = new float3(math.cos(angle), 0, math.sin(angle));
 
-            // 根据高度给一点向上拉力，越接近中心越被拉起
-            // 这里简单处理，给定一个固定的向上分量
+            // Give a little upward pull according to the height, the closer to the center, the more it will be pulled up起
+            // Here is a simple treatment, given a fixed upward component
             float3 upwardDirection = new float3(0,1,0);
 
-            // 风力随Voxel位置可以变化，这里简单处理，强度和WindStrength相关
-            // 切线方向让物体绕中心旋转，上方向将其抬起
+            // The wind force can vary with the position of the Voxel. Here we simply handle it. The strength is related to WindStrength
+            // The tangential direction rotates the object around the center, and the upward direction lifts it up
             wind = tangentDirection * WindStrength + upwardDirection * (WindStrength * 0.5f);
         }
 
@@ -137,11 +137,11 @@ partial struct BoxUpdateJob : IJobEntity
         // Update position
         xform.Position += box.Velocity * DeltaTime;
 
-        // 用户控制
+        // User Controls
         xform.Position.x += MoveX;
         xform.Position.z += MoveZ;
 
-        // 地面碰撞
+        // Ground collision
         if (xform.Position.y < 0)
         {
             box.Velocity.y = -box.Velocity.y * Voxelizer.Elasticity;
