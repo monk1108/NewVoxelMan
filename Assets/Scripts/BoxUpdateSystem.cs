@@ -8,16 +8,16 @@ using Unity.Transforms;
 [BurstCompile(CompileSynchronously = true)]
 public partial struct BoxUpdateSystem : ISystem
 {
-    private Vector4 _newColor; // Used to store the new color
-    private float _waveAmplitude; // Initial amplitude
-    private float _moveSpeed; // Movement speed
+    private Vector4 _newColor;
+    private float _waveAmplitude;
+    private float _moveSpeed;
 
     [BurstCompile]
     public void OnCreate(ref SystemState state)
     {
-        _newColor = (Vector4)Color.white; // Initialize to white
-        _waveAmplitude = 1.0f; // Initialize amplitude
-        _moveSpeed = 10.0f; // Initialize movement speed
+        _newColor = (Vector4)Color.white;
+        _waveAmplitude = 1.0f;
+        _moveSpeed = 10.0f;
     }
 
     [BurstCompile]
@@ -25,55 +25,52 @@ public partial struct BoxUpdateSystem : ISystem
     {
         if (!SystemAPI.HasSingleton<Voxelizer>()) return;
 
-        var writer = 
+        var writer =
           SystemAPI.GetSingleton<BeginSimulationEntityCommandBufferSystem.Singleton>()
           .CreateCommandBuffer(state.WorldUnmanaged).AsParallelWriter();
 
-        // Detect left mouse click
+        // Mouse click for color change
         if (Input.GetMouseButtonDown(0))
         {
-             // Generate a relatively nice random color (light color)
             _newColor = (Vector4)UnityEngine.Random.ColorHSV(0.0f, 1.0f, 0.5f, 1.0f, 0.8f, 1.0f);
-            // Randomly change amplitude
-            _waveAmplitude = UnityEngine.Random.Range(1.0f, 100.0f); 
-            // Output the new amplitude
-            Debug.Log($"New wave amplitude: {_waveAmplitude}"); 
+            _waveAmplitude = UnityEngine.Random.Range(1.0f, 100.0f);
+            Debug.Log($"New wave amplitude: {_waveAmplitude}");
         }
 
-        // Keyboard control movement
+        // Keyboard movement
         float moveX = 0f;
         float moveZ = 0f;
+        float dt = SystemAPI.Time.DeltaTime;
 
-        if (Input.GetKey(KeyCode.W))
+        if (Input.GetKey(KeyCode.W)) moveZ += _moveSpeed * dt;
+        if (Input.GetKey(KeyCode.S)) moveZ -= _moveSpeed * dt;
+        if (Input.GetKey(KeyCode.A)) moveX -= _moveSpeed * dt;
+        if (Input.GetKey(KeyCode.D)) moveX += _moveSpeed * dt;
+
+        // Wind force
+        float3 windDirection = new float3(0, 1, 1);
+        float windStrength = 10.0f;
+        if (SystemAPI.HasSingleton<WindForce>())
         {
-            moveZ += _moveSpeed * SystemAPI.Time.DeltaTime;
-            Debug.Log("Moving forward");
+            var wind = SystemAPI.GetSingleton<WindForce>();
+            windDirection = wind.Direction;
+            windStrength = wind.Strength;
         }
-        if (Input.GetKey(KeyCode.S))
-        {
-            moveZ -= _moveSpeed * SystemAPI.Time.DeltaTime;
-            Debug.Log("Moving backward");
-        }
-        if (Input.GetKey(KeyCode.A))
-        {
-            moveX -= _moveSpeed * SystemAPI.Time.DeltaTime;
-            Debug.Log("Moving left");
-        }
-        if (Input.GetKey(KeyCode.D))
-        {
-            moveX += _moveSpeed * SystemAPI.Time.DeltaTime;
-            Debug.Log("Moving right");
-        }
+
+        // show in console log what's the wind direction and strength
+        Debug.Log($"Wind direction: {windDirection}, Wind strength: {windStrength}");
 
         var job = new BoxUpdateJob()
         {
             Commands = writer,
             Voxelizer = SystemAPI.GetSingleton<Voxelizer>(),
             Time = (float)SystemAPI.Time.ElapsedTime,
-            DeltaTime = SystemAPI.Time.DeltaTime,
-            NewColor = _newColor, // Pass the color to the Job
+            DeltaTime = dt,
+            NewColor = _newColor,
             MoveX = moveX,
-            MoveZ = moveZ
+            MoveZ = moveZ,
+            WindDirection = windDirection,
+            WindStrength = windStrength
         };
 
         job.ScheduleParallel();
@@ -86,10 +83,12 @@ partial struct BoxUpdateJob : IJobEntity
     public EntityCommandBuffer.ParallelWriter Commands;
     public Voxelizer Voxelizer;
     public float Time;
-    public float DeltaTime;    
-    public Vector4 NewColor; // New field
-    public float MoveX; // Movement in X direction
-    public float MoveZ; // Movement in Z direction
+    public float DeltaTime;
+    public Vector4 NewColor;
+    public float MoveX;
+    public float MoveZ;
+    public float3 WindDirection;
+    public float WindStrength;
 
     void Execute([ChunkIndexInQuery] int index,
                  Entity entity,
@@ -97,81 +96,89 @@ partial struct BoxUpdateJob : IJobEntity
                  ref Box box,
                  ref URPMaterialPropertyBaseColor color)
     {
-        // Time step
         box.Time += DeltaTime;
 
-        // Expiration
+        // Expiration check
         if (box.Time > Voxelizer.VoxelLife)
         {
             Commands.DestroyEntity(index, entity);
             return;
         }
 
-        // Dynamics
-        box.Velocity -= Voxelizer.Gravity * DeltaTime;
-        xform.Position.y += box.Velocity * DeltaTime;
+        // Gravity as a vector
+        float3 gravityVector = new float3(0, -Voxelizer.Gravity, 0);
 
-        // Apply user movement
+        // Update velocity with gravity
+        box.Velocity += gravityVector * DeltaTime;
+
+        // Add wind force
+        box.Velocity += WindDirection * WindStrength * DeltaTime;
+
+        // Update position
+        xform.Position += box.Velocity * DeltaTime;
+
+        // Apply user movement (direct position shift)
         xform.Position.x += MoveX;
         xform.Position.z += MoveZ;
 
-        // Reflection on the ground
+        // Ground collision
         if (xform.Position.y < 0)
         {
-            box.Velocity *= -1 * Voxelizer.Elasticity;
+            // Reflect vertical velocity
+            box.Velocity.y = -box.Velocity.y * Voxelizer.Elasticity;
+
+            // Fix position above ground
             xform.Position.y = -xform.Position.y;
 
-            // horizontal friction
-            xform.Position.x *= Voxelizer.Friction;
-            xform.Position.z *= Voxelizer.Friction;
+            // Apply friction to horizontal velocity
+            box.Velocity.x *= Voxelizer.Friction;
+            box.Velocity.z *= Voxelizer.Friction;
         }
 
-        // Rotation
-        var rotationSpeed = 90.0f; // Rotation angle per second
+        // Rotation around Y axis
+        var rotationSpeed = 90.0f;
         xform.Rotation = math.mul(xform.Rotation, quaternion.RotateY(rotationSpeed * DeltaTime));
-        // Spiral
-        var spiralSpeed = 0.8f; // Horizontal movement speed
-        var spiralFrequency = 3.0f; // Spiral motion frequency
+
+        // Spiral motion
+        var spiralSpeed = 0.8f;
+        var spiralFrequency = 3.0f;
         xform.Position.x += spiralSpeed * math.sin(Time * spiralFrequency) * DeltaTime;
         xform.Position.z += spiralSpeed * math.cos(Time * spiralFrequency) * DeltaTime;
 
-        // Scaling animation
+        // Scale over lifetime
         var p01 = box.Time / Voxelizer.VoxelLife;
         var p01_2 = p01 * p01;
         xform.Scale = Voxelizer.VoxelSize * (1 - p01_2 * p01_2);
 
-        // Dynamic adjustment of HSV
+        // Dynamic HSV color changes
         float hue, saturation, value;
         Color.RGBToHSV((Color)NewColor, out hue, out saturation, out value);
 
-        // Dynamically adjust saturation and brightness
-        saturation = 0.7f + 0.3f * math.sin(Time * 3.0f); // Saturation fluctuates between 0.3 and 3
-        value = 0.6f + 0.4f * math.cos(Time * 2.5f);      // Brightness fluctuates between 0.4 and 2.5
-        // Enhance dynamic brightness on collision
-        if (xform.Position.y < 0.1f && math.abs(box.Velocity) > 0.1f)
+        saturation = 0.7f + 0.3f * math.sin(Time * 3.0f);
+        value = 0.6f + 0.4f * math.cos(Time * 2.5f);
+
+        // Velocity magnitude for collision effects
+        float speedMagnitude = math.length(box.Velocity);
+        if (xform.Position.y < 0.1f && speedMagnitude > 0.1f)
         {
-            value += 0.2f; // Enhance brightness change
-            xform.Scale *= 1.2f; // Enhance scaling effect
-        }
-        
-        // When two particles collide, darken and blacken the color and reduce the size
-        if (xform.Position.y < 0.1f && math.abs(box.Velocity) > 0.1f)
-        {
-            saturation *= 0.5f; // Significantly reduce saturation
-            value *= 0.3f; // Significantly reduce brightness
-            xform.Scale *= 0.8f; // Reduce size
+            value += 0.2f;
+            xform.Scale *= 1.2f;
         }
 
-        // Convert HSV back to RGB
+        // Further darken on collision
+        if (xform.Position.y < 0.1f && speedMagnitude > 0.1f)
+        {
+            saturation *= 0.5f;
+            value *= 0.3f;
+            xform.Scale *= 0.8f;
+        }
+
         var dynamicColor = (Vector4)Color.HSVToRGB(hue, saturation, value);
-
-        // Set color
         color.Value = dynamicColor;
 
-        // New Visual Feedback: Add a brief scale-up effect when the box hits the ground
-        if (xform.Position.y < 0.1f && math.abs(box.Velocity) > 0.1f)
+        if (xform.Position.y < 0.1f && speedMagnitude > 0.1f)
         {
-            xform.Scale *= 1f; // Temporarily scale up to emphasize the bounce
+            xform.Scale *= 1f;
         }
     }
 }

@@ -1,5 +1,6 @@
 using Unity.Entities;
 using UnityEngine;
+using Unity.Mathematics;
 
 public class BoxAuthoring : MonoBehaviour
 {
@@ -13,5 +14,5 @@ public class BoxAuthoring : MonoBehaviour
 public struct Box : IComponentData
 {
     public float Time;
-    public float Velocity;
+    public float3 Velocity;
 }
