@@ -1,10 +1,11 @@
 Voxelman
 ========
+Two demo videos are available on YouTube, one in fixed view and another in camera view. You could click on the following videos for more details.
 
-[![Video 1](https://img.youtube.com/vi/cbtDk5IhMLI/0.jpg)](https://www.youtube.com/watch?v=cbtDk5IhMLI)
+[![Video 1](https://img.youtube.com/vi/PblCDjdS0j4/0.jpg)](https://www.youtube.com/watch?v=PblCDjdS0j4)
 
 
-[![Video 2](https://img.youtube.com/vi/Ffuz0y7hKYc/0.jpg)](https://www.youtube.com/watch?v=Ffuz0y7hKYc)
+[![Video 2](https://img.youtube.com/vi/6m3dnMEybCE/0.jpg)](https://www.youtube.com/watch?v=6m3dnMEybCE)
 
 
 
